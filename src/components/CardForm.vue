@@ -1,50 +1,78 @@
 <template>
     <div class="form_wrapper">
-        <div class="card">
-            <div class="card_back_side">
-                <div class="magnetic_stripe"></div>
-                <div class="cvc_field">
-                    <input v-model="formData.cvc" type="password" placeholder="CVC" required class="cvc_input" />
+        <Form :validation-schema="validationSchema" @submit="handleSubmit">
+            <div class="card">
+                <div class="card_back_side">
+                    <div class="magnetic_stripe"></div>
+                    <div class="cvc_field">
+                        <Field name="cvc" v-slot="{ field, errors }">
+                            <input v-bind="field" v-model="formData.cvc" placeholder="CVC"
+                                :class="{ 'error_input': errors.length }" class="cvc_input" />
+                        </Field>
+                        <ErrorMessage name="cvc" class="error-message" />
+                    </div>
+                </div>
+
+                <div class="card_front_side">
+                    <div class="cardholder_field">
+                        <Field name="name" v-slot="{ field, errors }">
+                            <input v-bind="field" v-model="formData.name" placeholder="Holder of card"
+                                :class="{ 'error_input': errors.length }" class="cardholder_input" />
+                        </Field>
+                        <ErrorMessage name="name" class="error-message" />
+                    </div>
+
+                    <div class="card_number_field">
+                        <Field name="number" v-slot="{ field, errors }">
+                            <input v-bind="field" v-model="formData.number" placeholder="Number of card"
+                                :class="{ 'error_input': errors.length }" class="card_number_input" />
+                        </Field>
+                        <ErrorMessage name="number" class="error-message" />
+                    </div>
+
+                    <div class="valid_thru_field">
+                        <span>VALID THRU</span>
+                        <div class="valid_thru_wrapper">
+                            <div class="input_wrapper">
+                                <Field name="Month" v-slot="{ field, errors }">
+                                    <input v-bind="field" v-model="formData.Month" placeholder="MM"
+                                        :class="{ 'error_input': errors.length }" class="month_input" />
+                                </Field>
+                                <ErrorMessage name="Month" class="error-message" />
+                            </div>
+
+                            <span class="separator">
+                                <img src="@/assets/line.png" alt="Line" />
+                            </span>
+                            <div class="input_wrapper">
+                                <Field name="Year" v-slot="{ field, errors }">
+                                    <input v-bind="field" v-model="formData.Year" placeholder="YY"
+                                        :class="{ 'error_input': errors.length }" class="year_input" />
+                                </Field>
+                                <ErrorMessage name="Year" class="error-message" />
+                            </div>
+                        </div>
+                        <div class="card_system_logo">
+                            <img :src="cardLogo" alt="Card Logo" class="logo" />
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <div class="card_front_side">
-                <div class="cardholder_field">
-                    <input v-model="formData.name" type="text" placeholder="Holder of card" required
-                        class="cardholder_input" />
-                </div>
-
-                <div class="card_number_field">
-                    <input v-model="formData.number" type="text" placeholder="Number of card" required
-                        class="card_number_input" />
-                </div>
-
-                <div class="valid_thru_field">
-                    <span>VALID THRU</span>
-                    <div class="valid_thru_wrapper">
-                        <input v-model="formData.Month" type="text" placeholder="MM" required
-                            class="month_input" />
-                        <span class="separator">
-                            <img src="@/assets/line.png" alt="Line"/>
-                        </span>
-                        <input v-model="formData.Year" type="text" placeholder="YY" required class="year_input" />
-                    </div>
-                    <div class="card_system_logo">
-                        <img src="@/assets/vizza_large.png" alt="Visa" class="logo" />
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-
-        <button @click="handleSubmit" class="send_button">Send</button>
+            <button type="submit" class="send_button">Send</button>
+        </Form>
     </div>
 </template>
 
 <script>
+import { Form, Field, ErrorMessage } from 'vee-validate';
+import { validationSchema } from '@/validationRules';
+
 export default {
     data() {
         return {
+            validationSchema,
             formData: {
                 name: '',
                 number: '',
@@ -54,16 +82,62 @@ export default {
             }
         };
     },
+    computed: {
+        cardLogo() {
+            if (this.formData.number.startsWith('4')) {
+                return ('/src/assets/Visa.png');
+            } else if (this.formData.number.startsWith('5')) {
+                return ('/src/assets/Master.png');
+            } else {
+                return ('/src/assets/vizza_large.png');
+            }
+        }
+    },
     methods: {
         handleSubmit() {
             this.$emit('add-card', { ...this.formData });
             this.formData = { name: '', number: '', Month: '', Year: '', cvc: '' };
         }
-    }
+    },
+    components: {
+        Form,
+        Field,
+        ErrorMessage
+    },
 };
 </script>
 
 <style scoped>
+
+.error_input {
+    border: 2px solid red;
+    border-radius: 4px;
+}
+
+.error_input:focus{
+    border: 2px solid red;
+    border-radius: 4px;
+}
+
+.input_wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.error-message {
+    position: absolute;
+    bottom: -16px;
+    left: 0;
+    width: 100%;
+    text-align: right;
+    padding-top: 2px;
+    color: red;
+    font-size: 12px;
+}
+
+
 .form_wrapper {
     margin-top: 80px;
 }
@@ -79,9 +153,6 @@ export default {
     position: relative;
 }
 
-input:hover {
-    border: 2px solid #176FC1;
-}
 
 .card_front_side,
 .card_back_side {
@@ -118,7 +189,6 @@ input:hover {
 .year_input,
 .cvc_input {
     height: 42px;
-    border: 2px solid #ADADAD;
     background: #FFF;
     padding-left: 10px;
     font-size: 16px;
@@ -160,13 +230,11 @@ input:hover {
     align-items: center;
 }
 
-
-
-.valid_thru_wrapper{
-    display:flex;
+.valid_thru_wrapper {
+    display: flex;
 }
 
-.separator{
+.separator {
     display: flex;
     padding-top: 7px;
     height: 30px;
